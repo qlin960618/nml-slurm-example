@@ -4,90 +4,68 @@
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+SLURM is a workload manager and job scheduler for Linux and Unix-like kernels, used by many of the world's supercomputers 
+and computer clusters. It provides three key functions. First, it allocates exclusive and/or non-exclusive access to resources 
+(computer nodes) to users for some duration of time so they can perform work. Second, it provides a framework for starting, 
+executing, and monitoring work (typically a parallel job) on a set of allocated nodes. Finally, it arbitrates contention 
+for resources by managing a queue of pending work. Here will be a brief introduction of how to use SLURM to run 
+distributed training on multiple nodes using the PyTorch DistributedDataParallel Framework on the internal 
+[nml-slurm-cluster] cluster.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**Disclaimer**: This is not a comprehensive guide on SLURM. For more information, please refer to the [SLURM documentation](https://slurm.schedmd.com/overview.html). Additionally, this guide is written for the internal [nml-slurm-cluster] cluster. If you are using a different cluster (ex. UTokyo Wisteria/BDEC-01), please refer to the documentation of the specific cluster.
 
-## Add your files
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## System Setup
+To begin using the system you will have few initial steps to complete from the help of admin as these steps will include 
+access to admin permissions to the targeted node
+- setup your user account
+- setup your user home directory with link to user_data directory (this is subject to change in future shared storage setup)
+- setup your conda environment (alternatively you can use virtualenv stored in your storage/data directory)
 
+### 1. Initial login to the cluster
+```bash
+ssh <username>@10.198.113.104 -p 1023
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/NML/lab-admin/distributed_dataparallel_training-example.git
-git branch -M main
-git push -uf origin main
+
+
+### 2. Setup your user home directory
+The storage of your code and data will locate in the following location
+- `~/`: This is your home directory which will also contain `<username>_data` linked to the /storage
+- `/storage/user_data/<username>_data`: This is where you should store your Dataset and code
+
+Ex. cloning your code from git (you should change the repository link to your own forked repository)
+the code here is only an example and **will not run as it is**
+```bash
+cd user_data
+git clone https://gitlab.com/NML/lab-admin/distributed_dataparallel_training-example.git
 ```
 
-## Integrate with your tools
+Ex. moving your dataset to the storage (SPARROW is mounted as read-only mode here, so you will ot have the ability to 
+modify file on it here)
+```bash
+cd /mnt/sparrow/...
+cp -r <dataset> /storage/user_data/<username>_data/<dataset>
+```
 
-- [ ] [Set up project integrations](https://gitlab.com/NML/lab-admin/distributed_dataparallel_training-example/-/settings/integrations)
+### 3. submit job to the cluster
+```bash
+cd distributed_dataparallel_training-example/Training/jobs
+sbatch train_job.sh
+```
 
-## Collaborate with your team
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Basic SLURM commands 
+- `sbatch`: submit a job script to the cluster
+```bash
+sbatch <job_script.sh>
+```
+- `squeue`: show the status of jobs in the queue
+- `scancel`: cancel a job
+```bash
+scancel <job_id>
+```
+- `scontrol`: show the status of nodes in the cluster
 
-## Test and Deploy
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## IMPORTANT NOTES
+- do not store your dataset/code in your home directory, as the disk space is limited (currently ~200GB) and will be shared
