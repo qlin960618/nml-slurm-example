@@ -1,6 +1,44 @@
 # distributed_dataparallel_training example
 
+```bash
+nml@nml-slurm-node1:~$ scontrol show nodes
+NodeName=nml-slurm-node1 Arch=x86_64 CoresPerSocket=8
+   CPUAlloc=0 CPUEfctv=16 CPUTot=16 CPULoad=0.00
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:2(S:0)
+   NodeAddr=nml-slurm-node1 NodeHostName=nml-slurm-node1 Version=23.11.0
+   OS=Linux 6.2.0-37-generic #38~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov  2 18:01:13 UTC 2
+   RealMemory=128681 AllocMem=0 FreeMem=97029 Sockets=1 Boards=1
+   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=debug
+   BootTime=2023-12-07T21:50:56 SlurmdStartTime=2023-12-07T21:54:09
+   LastBusyTime=2023-12-08T22:51:31 ResumeAfterTime=None
+   CfgTRES=cpu=16,mem=128681M,billing=16
+   AllocTRES=
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
 
+NodeName=nml-slurm-node2 Arch=x86_64 CoresPerSocket=10
+   CPUAlloc=0 CPUEfctv=20 CPUTot=20 CPULoad=0.02
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:5(S:0)
+   NodeAddr=nml-slurm-node2 NodeHostName=nml-slurm-node2 Version=23.11.0
+   OS=Linux 6.2.0-37-generic #38~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov  2 18:01:13 UTC 2
+   RealMemory=31906 AllocMem=0 FreeMem=19636 Sockets=1 Boards=1
+   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=debug
+   BootTime=2023-12-07T21:50:19 SlurmdStartTime=2023-12-07T21:50:30
+   LastBusyTime=2023-12-08T12:20:07 ResumeAfterTime=None
+   CfgTRES=cpu=20,mem=31906M,billing=20
+   AllocTRES=
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
+
+```
 
 ## Getting started
 
