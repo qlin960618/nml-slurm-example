@@ -14,6 +14,9 @@ from train_step import split_train_val_test
 from config.training_param import TrainingParameters
 from config.network_param import NetworkParameter
 
+################################################################
+# IMPORTANT NOTES: This is an example preprocessing script for the keypoint detection using segmentation_models_pytorch
+
 if __name__ == '__main__':
     nn_param_override = {
         "CLASSES": ['class_label1', 'class_label2']

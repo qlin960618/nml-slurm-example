@@ -8,19 +8,25 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 import os
 
-import segmentation_models_pytorch as smp
+##################################################################
+# Example of using segmentation_models_pytorch Unet
+# import segmentation_models_pytorch as smp
 import segmentation_models_pytorch.utils as smp_utils
-
-from .tools.Dataset_confidence_map import Dataset
-from .tools import network_common as nn_common
+# from .tools.Dataset_confidence_map import Dataset
+# from .tools import network_common as nn_common
+##################################################################
+from .tools.Dataset import ExampleDataset
 
 TESTING_MODE = False
 
 
-def ddp_setup():
-    init_process_group(backend="nccl")
+def ddp_setup(backend: str = "nccl"):
+    init_process_group(backend=backend)
     torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
 
+
+def ddp_finalize():
+    destroy_process_group()
 
 class Trainer:
     def __init__(
@@ -130,6 +136,8 @@ class Trainer:
                         max_score = valid_logs['mse_loss']
                         torch.save(self.model, best_save_path)
                         print('Best Model saved! on epoch: ', epoch)
+        if self.global_rank == 0 and (not os.path.exists(best_save_path)):  # save the model if it is not saved yet
+            torch.save(self.model, best_save_path)
 
 
 def load_train_objs(
@@ -146,40 +154,51 @@ def load_train_objs(
         assert nn_param is not None, "nn_param is None"
 
     if checkpoint_model is None:
-        base_model = smp.Unet(
-            encoder_name=nn_param["encoder"],
-            encoder_weights=nn_param["encoder_weight"],
-            encoder_depth=nn_param["encoder_depth"],
-            classes=len(nn_param["classes"]),
-            activation=nn_param["activation"],
-        )
+        base_model = torch.nn.Linear(20, 1)  # load your model
+        ##################################################################
+        # Example of using segmentation_models_pytorch Unet
+        # base_model = smp.Unet(
+        #     encoder_name=nn_param["encoder"],
+        #     encoder_weights=nn_param["encoder_weight"],
+        #     encoder_depth=nn_param["encoder_depth"],
+        #     classes=len(nn_param["classes"]),
+        #     activation=nn_param["activation"],
+        # )
+        ##################################################################
     else:
         base_model = checkpoint_model
 
-    preprocessing_fn = smp.encoders.get_preprocessing_fn(nn_param['encoder'], nn_param['encoder_weight'])
+    ##################################################################
+    # Example of from segmentation_models_pytorch Unet
+    # x_train_dir = os.path.join(dataset_path, 'train')
+    # y_train_dir = os.path.join(dataset_path, 'train_mask')
+    # x_valid_dir = os.path.join(dataset_path, 'val')
+    # y_valid_dir = os.path.join(dataset_path, 'val_mask')
+    # preprocessing_fn = smp.encoders.get_preprocessing_fn(nn_param['encoder'], nn_param['encoder_weight'])
+    # train_dataset = Dataset(x_train_dir, y_train_dir,
+    #                         nn_param['network_img_size'], max_id=100 if TESTING_MODE else None,
+    #                         preprocessing=nn_common.get_preprocessing(preprocessing_fn),
+    #                         classes=nn_param["classes"])
+    #
+    # val_dataset = Dataset(x_valid_dir, y_valid_dir,
+    #                       nn_param['network_img_size'], max_id=40 if TESTING_MODE else None,
+    #                       preprocessing=nn_common.get_preprocessing(preprocessing_fn),
+    #                       classes=nn_param["classes"])
+    # optimizer = torch.optim.Adam(base_model.parameters(), lr=optimizer_param["lr"],
+    #                              weight_decay=optimizer_param["weight_decay"])
+    ##################################################################
 
-    x_train_dir = os.path.join(dataset_path, 'train')
-    y_train_dir = os.path.join(dataset_path, 'train_mask')
-    x_valid_dir = os.path.join(dataset_path, 'val')
-    y_valid_dir = os.path.join(dataset_path, 'val_mask')
+    train_dataset = ExampleDataset(2048)
+    val_dataset = ExampleDataset(512)
 
-    train_dataset = Dataset(x_train_dir, y_train_dir,
-                            nn_param['network_img_size'], max_id=100 if TESTING_MODE else None,
-                            preprocessing=nn_common.get_preprocessing(preprocessing_fn),
-                            classes=nn_param["classes"])
-
-    val_dataset = Dataset(x_valid_dir, y_valid_dir,
-                          nn_param['network_img_size'], max_id=40 if TESTING_MODE else None,
-                          preprocessing=nn_common.get_preprocessing(preprocessing_fn),
-                          classes=nn_param["classes"])
-
-    optimizer = torch.optim.Adam(base_model.parameters(), lr=optimizer_param["lr"],
-                                 weight_decay=optimizer_param["weight_decay"])
+    optimizer = torch.optim.SGD(base_model.parameters(), lr=1e-3)
 
     return train_dataset, val_dataset, base_model, optimizer
 
 
-def prepare_dataloader(train_dataset: Dataset, val_dataset: Dataset, batch_size: int):
+def prepare_dataloader(train_dataset: torch.utils.data.Dataset,
+                       val_dataset: torch.utils.data.Dataset,
+                       batch_size: int):
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,

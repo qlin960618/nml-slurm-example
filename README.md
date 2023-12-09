@@ -42,6 +42,8 @@ NodeName=nml-slurm-node2 Arch=x86_64 CoresPerSocket=10
 
 ## Getting started
 
+This tutorial and example is based on example code found here: [ddp tutorial series](https://github.com/pytorch/examples/tree/main/distributed/ddp-tutorial-series)
+
 SLURM is a workload manager and job scheduler for Linux and Unix-like kernels, used by many of the world's supercomputers 
 and computer clusters. It provides three key functions. First, it allocates exclusive and/or non-exclusive access to resources 
 (computer nodes) to users for some duration of time so they can perform work. Second, it provides a framework for starting, 
@@ -52,7 +54,6 @@ distributed training on multiple nodes using the PyTorch DistributedDataParallel
 
 **Disclaimer**: This is not a comprehensive guide on SLURM. For more information, please refer to the [SLURM documentation](https://slurm.schedmd.com/overview.html). Additionally, this guide is written for the internal [nml-slurm-cluster] cluster. If you are using a different cluster (ex. UTokyo Wisteria/BDEC-01), please refer to the documentation of the specific cluster.
 
-
 ## System Setup
 To begin using the system you will have few initial steps to complete from the help of admin as these steps will include 
 access to admin permissions to the targeted node
@@ -60,13 +61,16 @@ access to admin permissions to the targeted node
 - setup your user home directory with link to user_data directory (this is subject to change in future shared storage setup)
 - setup your conda environment (alternatively you can use virtualenv stored in your storage/data directory)
 
-### 1. Initial login to the cluster
+### Step 1. Initial login to the cluster
 ```bash
 ssh <username>@10.198.113.104 -p 1023
 ```
 
+once login you will be in the login node, you can enable ssh passwordless login to the cluster by appending your public key
+in the `~/.ssh/authorized_keys` file. For this, you can find instruction [here](https://www.ssh.com/academy/ssh/copy-id)
 
-### 2. Setup your user home directory
+
+### Step 2. Setup your user home directory
 The storage of your code and data will locate in the following location
 - `~/`: This is your home directory which will also contain `<username>_data` linked to the /storage
 - `/storage/user_data/<username>_data`: This is where you should store your Dataset and code
@@ -85,7 +89,10 @@ cd /mnt/sparrow/...
 cp -r <dataset> /storage/user_data/<username>_data/<dataset>
 ```
 
-### 3. submit job to the cluster
+### Step3. 
+
+
+### Step 4. submit job to the cluster
 ```bash
 cd distributed_dataparallel_training-example/Training/jobs
 sbatch train_job.sh
