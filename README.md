@@ -65,6 +65,9 @@ access to admin permissions to the targeted node
 ```bash
 ssh <username>@10.198.113.104 -p 1023
 ```
+notes:
+- port `1023`: head node (nml-slurm-node1)
+- port `1024`: compute node 2 (nml-slurm-node2) 
 
 once login you will be in the login node, you can enable ssh passwordless login to the cluster by appending your public key
 in the `~/.ssh/authorized_keys` file. For this, you can find instruction [here](https://www.ssh.com/academy/ssh/copy-id)
@@ -76,9 +79,9 @@ The storage of your code and data will locate in the following location
 - `/storage/user_data/<username>_data`: This is where you should store your Dataset and code
 
 Ex. cloning your code from git (you should change the repository link to your own forked repository)
-the code here is only an example and **will not run as it is**
+the code here is only an example and **will probably not run as it is**
 ```bash
-cd user_data
+cd /storage/user_data/[YOUR DIR]
 git clone https://gitlab.com/NML/lab-admin/distributed_dataparallel_training-example.git
 ```
 
@@ -86,7 +89,7 @@ Ex. moving your dataset to the storage (SPARROW is mounted as read-only mode her
 modify file on it here)
 ```bash
 cd /mnt/sparrow/...
-cp -r <dataset> /storage/user_data/<username>_data/<dataset>
+cp -r <dataset> /storage/user_data/[YOUR DIR]/<dataset>
 ```
 
 ### Step3. 
