@@ -77,6 +77,8 @@ in the `~/.ssh/authorized_keys` file. For this, you can find instruction [here](
 The storage of your code and data will locate in the following location
 - `~/`: This is your home directory which will also contain `<username>_data` linked to the /storage
 - `/storage/user_data/<username>_data`: This is where you should store your Dataset and code
+- in many cases, your user home directory may not be synced across all nodes. However, the reference from `/storage/...`
+should be.
 
 Ex. cloning your code from git (you should change the repository link to your own forked repository)
 the code here is only an example and **will probably not run as it is**
