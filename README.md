@@ -3,41 +3,58 @@
 ```bash
 nml@nml-slurm-node1:~$ scontrol show nodes
 NodeName=nml-slurm-node1 Arch=x86_64 CoresPerSocket=8
-   CPUAlloc=0 CPUEfctv=16 CPUTot=16 CPULoad=0.00
+   CPUAlloc=16 CPUEfctv=16 CPUTot=16 CPULoad=4.05
    AvailableFeatures=(null)
    ActiveFeatures=(null)
-   Gres=gpu:2(S:0)
+   Gres=gpu:p6000:2(S:0)
    NodeAddr=nml-slurm-node1 NodeHostName=nml-slurm-node1 Version=23.11.0
    OS=Linux 6.2.0-37-generic #38~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov  2 18:01:13 UTC 2
-   RealMemory=128681 AllocMem=0 FreeMem=97029 Sockets=1 Boards=1
-   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   RealMemory=128600 AllocMem=128600 FreeMem=11598 Sockets=1 Boards=1
+   State=ALLOCATED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
    Partitions=debug
-   BootTime=2023-12-07T21:50:56 SlurmdStartTime=2023-12-07T21:54:09
-   LastBusyTime=2023-12-08T22:51:31 ResumeAfterTime=None
-   CfgTRES=cpu=16,mem=128681M,billing=16
-   AllocTRES=
+   BootTime=2023-12-07T21:50:56 SlurmdStartTime=2023-12-14T16:55:41
+   LastBusyTime=2023-12-19T09:14:28 ResumeAfterTime=None
+   CfgTRES=cpu=16,mem=128600M,billing=16
+   AllocTRES=cpu=16,mem=128600M
    CapWatts=n/a
    CurrentWatts=0 AveWatts=0
    ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
 
 NodeName=nml-slurm-node2 Arch=x86_64 CoresPerSocket=10
-   CPUAlloc=0 CPUEfctv=20 CPUTot=20 CPULoad=0.02
+   CPUAlloc=20 CPUEfctv=20 CPUTot=20 CPULoad=8.84
    AvailableFeatures=(null)
    ActiveFeatures=(null)
-   Gres=gpu:5(S:0)
+   Gres=gpu:3070:5(S:0)
    NodeAddr=nml-slurm-node2 NodeHostName=nml-slurm-node2 Version=23.11.0
    OS=Linux 6.2.0-37-generic #38~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov  2 18:01:13 UTC 2
-   RealMemory=31906 AllocMem=0 FreeMem=19636 Sockets=1 Boards=1
-   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   RealMemory=31900 AllocMem=31900 FreeMem=5501 Sockets=1 Boards=1
+   State=ALLOCATED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
    Partitions=debug
-   BootTime=2023-12-07T21:50:19 SlurmdStartTime=2023-12-07T21:50:30
-   LastBusyTime=2023-12-08T12:20:07 ResumeAfterTime=None
-   CfgTRES=cpu=20,mem=31906M,billing=20
-   AllocTRES=
+   BootTime=2023-12-07T21:50:20 SlurmdStartTime=2023-12-14T16:55:41
+   LastBusyTime=2023-12-19T09:14:28 ResumeAfterTime=None
+   CfgTRES=cpu=20,mem=31900M,billing=20
+   AllocTRES=cpu=20,mem=31900M
    CapWatts=n/a
    CurrentWatts=0 AveWatts=0
    ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
 
+NodeName=nml-slurm-node3 Arch=x86_64 CoresPerSocket=6
+   CPUAlloc=12 CPUEfctv=12 CPUTot=12 CPULoad=4.48
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:v100:2(S:0)
+   NodeAddr=nml-slurm-node3 NodeHostName=nml-slurm-node3 Version=23.11.0
+   OS=Linux 6.2.0-39-generic #40~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 16 10:53:04 UTC 2
+   RealMemory=63980 AllocMem=63980 FreeMem=34724 Sockets=1 Boards=1
+   State=ALLOCATED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=debug
+   BootTime=2023-12-14T15:23:04 SlurmdStartTime=2023-12-14T16:55:41
+   LastBusyTime=2023-12-19T09:14:28 ResumeAfterTime=None
+   CfgTRES=cpu=12,mem=63980M,billing=12
+   AllocTRES=cpu=12,mem=63980M
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
 ```
 
 ## Getting started
@@ -68,6 +85,7 @@ ssh <username>@10.198.113.104 -p 1023
 notes:
 - port `1023`: head node (nml-slurm-node1)
 - port `1024`: compute node 2 (nml-slurm-node2) 
+- node3 not currently exposed
 
 once login you will be in the login node, you can enable ssh passwordless login to the cluster by appending your public key
 in the `~/.ssh/authorized_keys` file. For this, you can find instruction [here](https://www.ssh.com/academy/ssh/copy-id)
