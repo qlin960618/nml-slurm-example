@@ -3,11 +3,11 @@ import builtins
 import argparse
 # import torch
 # import torch.distributed as dist
-from train_step.train_multinode import ddp_setup, load_train_objs, prepare_dataloader, Trainer, ddp_finalize
+from train_step.train_multinode import ddp_setup, load_train_objs, prepare_dataloader, Trainer, ddp_finalize, DISTRIBUTED
 ##################################################################
 # Example of using segmentation_models_pytorch Unet
-import segmentation_models_pytorch.utils as smp_utils
-import segmentation_models_pytorch as smp
+# import segmentation_models_pytorch.utils as smp_utils
+# import segmentation_models_pytorch as smp
 ##################################################################
 
 
@@ -29,6 +29,15 @@ if __name__ == '__main__':
         node_name = os.environ['SLURMD_NODENAME']
     except KeyError:
         node_name = 'local'
+
+    if DISTRIBUTED:
+        print("Running with distributed mode")
+    else:
+        print("Running in non-distributed node")
+        os.environ["LOCAL_RANK"] = "0"
+        os.environ["RANK"] = "0"
+
+
     _args = parse_args()
 
     ##################################################################
@@ -92,7 +101,7 @@ if __name__ == '__main__':
     ##################################################################
     # you will need to customise this function to load your own dataset and model
     ##################################################################
-    train_dataset, val_dataset, model, optimizer = load_train_objs(
+    train_dataset, val_dataset, model, optimizer, loss = load_train_objs(
         # dataset_path=train_param.dataset_path,
         # result_path=os.path.join(train_param.result_path, 'best_model.pth'),
         node_name=node_name,
@@ -114,7 +123,7 @@ if __name__ == '__main__':
     print(f'{node_name}::GPU{global_rank}::Done loading dataset')
 
     train_loader, val_loader = prepare_dataloader(train_dataset, val_dataset,
-                                                  _args.batch_size)
+                                                  _args.batch_size, distributed=DISTRIBUTED)
     print(f'{node_name}::GPU{global_rank}::Done preparing dataloader: batch size {_args.batch_size}')
     trainer = Trainer(
         model=model,
@@ -127,6 +136,7 @@ if __name__ == '__main__':
     print(f'{node_name}::GPU{global_rank}::Start train')
     trainer.train(_args.epochs,
                   best_save_path=os.path.join(result_path, 'best_model.pth'),
+                  loss=loss,
                   ##################################################################
                   # Example of using segmentation_models_pytorch Unet
                   # val_params={

@@ -1,0 +1,1 @@
+from .train_multinode import DISTRIBUTED

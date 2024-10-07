@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -11,22 +14,49 @@ import os
 ##################################################################
 # Example of using segmentation_models_pytorch Unet
 # import segmentation_models_pytorch as smp
-import segmentation_models_pytorch.utils as smp_utils
+# import segmentation_models_pytorch.utils as smp_utils
 # from .tools.Dataset_confidence_map import Dataset
 # from .tools import network_common as nn_common
 ##################################################################
 from .tools.Dataset import ExampleDataset
 
 TESTING_MODE = False
+if "SLURM_JOB_ID" in os.environ:
+    DISTRIBUTED = True
+else:
+    DISTRIBUTED = False
+
+
+class SimpleMeter:
+    def __init__(self, name):
+        self.name = name
+        self._data = []
+
+    @property
+    def __name__(self):
+        return self.name
+
+    def add(self, value):
+        if isinstance(value, list):
+            self._data += value
+        else:
+            self._data.append(value)
+
+    def get_average(self):
+        arr = np.array(self._data)
+        return np.mean(arr)
 
 
 def ddp_setup(backend: str = "nccl"):
-    init_process_group(backend=backend)
+    if DISTRIBUTED:
+        init_process_group(backend=backend)
     torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
 
 
 def ddp_finalize():
-    destroy_process_group()
+    if DISTRIBUTED:
+        destroy_process_group()
+
 
 class Trainer:
     def __init__(
@@ -51,7 +81,8 @@ class Trainer:
             print("Loading snapshot")
             self._load_snapshot(snapshot_path)
 
-        self.model = DDP(self.model, device_ids=[self.local_rank])
+        if DISTRIBUTED:
+            self.model = DDP(self.model, device_ids=[self.local_rank])
 
     def _load_snapshot(self, snapshot_path):
         loc = f"cuda:{self.local_rank}"
@@ -70,15 +101,20 @@ class Trainer:
     def _run_epoch(self, epoch, loss):
         b_sz = len(next(iter(self.train_data))[0])
         print(f"[GPU{self.global_rank}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
-        self.train_data.sampler.set_epoch(epoch)
+        if DISTRIBUTED:
+            self.train_data.sampler.set_epoch(epoch)
         for source, targets in self.train_data:
             source = source.to(self.local_rank)
             targets = targets.to(self.local_rank)
             self._run_batch(source, targets, loss)
 
     def _save_snapshot(self, epoch):
+        if DISTRIBUTED:
+            state_dict = deepcopy(self.model.module).state_dict()
+        else:
+            state_dict = deepcopy(self.model).state_dict()
         snapshot = {
-            "MODEL_STATE": self.model.module.state_dict(),
+            "MODEL_STATE": state_dict,
             "EPOCHS_RUN": epoch,
         }
         torch.save(snapshot, self.snapshot_path)
@@ -92,8 +128,8 @@ class Trainer:
 
     def _valid_one_epoch(self, loss: torch.nn.MSELoss = None, metrics=None):
         self.model.eval()
-        loss_meter = smp_utils.train.AverageValueMeter()
-        metrics_meters = {metric.__name__: smp_utils.train.AverageValueMeter() for metric in metrics}
+        loss_meter = SimpleMeter("loss")
+        metric_meter = SimpleMeter("metric")
         logs = {}
 
         num_batches = len(self.val_data)
@@ -107,16 +143,16 @@ class Trainer:
             # update loss logs
             loss_value = loss_val.cpu().detach().numpy()
             loss_meter.add(loss_value)
-            loss_logs = {loss.__name__: loss_meter.mean}
+            loss_logs = {loss_meter.__name__: loss_meter.get_average()}
             logs.update(loss_logs)
 
             # update metrics logs
             for metric_fn in metrics:
                 metric_value = metric_fn(y_pred, y).cpu().detach().numpy()
-                metrics_meters[metric_fn.__name__].add(metric_value)
-            metrics_logs = {k: v.mean for k, v in metrics_meters.items()}
-            logs.update(metrics_logs)
+                metric_meter.add(metric_value)
 
+        logs["loss"] = loss_meter.get_average()
+        logs["metric"] = metric_meter.get_average()
         self.model.train()
         return logs
 
@@ -151,7 +187,7 @@ def load_train_objs(
         checkpoint_model = torch.load(result_path)
     else:
         checkpoint_model = None
-        assert nn_param is not None, "nn_param is None"
+        # assert nn_param is not None, "nn_param is None"
 
     if checkpoint_model is None:
         base_model = torch.nn.Linear(20, 1)  # load your model
@@ -188,23 +224,30 @@ def load_train_objs(
     #                              weight_decay=optimizer_param["weight_decay"])
     ##################################################################
 
+    loss = torch.nn.MSELoss()
+
     train_dataset = ExampleDataset(2048)
     val_dataset = ExampleDataset(512)
 
     optimizer = torch.optim.SGD(base_model.parameters(), lr=1e-3)
 
-    return train_dataset, val_dataset, base_model, optimizer
+    return train_dataset, val_dataset, base_model, optimizer, loss
 
 
 def prepare_dataloader(train_dataset: torch.utils.data.Dataset,
                        val_dataset: torch.utils.data.Dataset,
-                       batch_size: int):
+                       batch_size: int,
+                       distributed: bool = False):
+    if distributed:
+        ddp_sampler = DistributedSampler(train_dataset)
+    else:
+        ddp_sampler = None
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         pin_memory=True,
         shuffle=False,
-        sampler=DistributedSampler(train_dataset)
+        sampler=ddp_sampler
     )
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=1, shuffle=False, pin_memory=True,

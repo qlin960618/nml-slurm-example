@@ -8,10 +8,10 @@
 ## NOTE: Everything beside --gpus seem to be very specific, modifying them may cause command in the torchrun.sh script
 #         to hang at srun grabbing head_node ip. alternatively, can manually set head_node_ip and pass it to torchrun.sh
 #######################################################################################################
-#SBATCH --exclusive --nodes=2 --ntasks-per-node=1 --gpus=7
+#SBATCH --exclusive --nodes=2 --ntasks-per-node=1 --gpus=4 --nodelist=nml-slurm-node1,nml-slurm-node3
 
-#SBATCH --chdir=/.../[THIS GIT REPO]
-#SBATCH --output=/.../[THIS GIT REPO]/out/%x-%j.out
+#SBATCH --chdir=[REPLACE_ME]
+#SBATCH --output=[REPLACE_ME]/out/%x-%j.out
 
 
 nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
