@@ -10,7 +10,7 @@ conda activate [YOUR_CONDA_ENVIRONMENT]
 
 torchrun --nnodes=$SLURM_NNODES \
     --node_rank=$SLURM_NODEID \
-    --nproc_per_node=$SLURM_GPUS_PER_NODE\
+    --nproc_per_node=$SLURM_GPUS_ON_NODE\
     --master_addr=$1 --master_port=8344 \
     Training/run_torchrun_train.py \
     --epochs=100 \
